@@ -1,0 +1,144 @@
+package io.hhplus.tdd.unit;
+
+import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.TransactionType;
+import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.exception.ChargePointNotPositiveException;
+import io.hhplus.tdd.point.exception.OutOfPointException;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+public class PointControllerUnitTest extends TddApplicationUnitTest {
+
+    /*
+     * 테스트 작성 이유 : 사용자가 포인트를 성공적으로 조회하는 것을 확인합니다.
+     */
+    @DisplayName("사용자가 현재 남은 포인트를 조회할 수 있다.")
+    @Test
+    void whenUserGetPoint_ThenSeeCurrentPoint() {
+        // given
+        UserPoint userPoint = getBeanContainer().userPointRepository.save(new UserPoint(1, 100, System.currentTimeMillis()));
+
+        // when
+        UserPoint result = getBeanContainer().pointController.point(userPoint.id());
+
+        // then
+        assertThat(result.id()).isEqualTo(userPoint.id());
+        assertThat(result.point()).isEqualTo(userPoint.point());
+    }
+
+    /*
+     * 테스트 작성 이유 : UserPointTable 이 upsert 를 하고 있기에 자동 가입을 하나의 요구사항으로 파악했습니다.
+     */
+    @DisplayName("등록되지 않은 사용자는 자동으로 가입할 수 있다.")
+    @Test
+    void whenNotUserGetPoint_thenNoPoint() {
+        // given
+        long notExistUserId = 999L;
+
+        // when
+        UserPoint result = getBeanContainer().pointController.point(notExistUserId);
+
+        // then
+        assertThat(result.id()).isEqualTo(notExistUserId);
+        assertThat(result.point()).isEqualTo(0);
+    }
+
+    /*
+     * 테스트 작성 이유 : 사용자는 충전한 내역과 이용한 내역 모두를 조회할 수 있어야 합니다.
+     */
+    @DisplayName("사용자가 포인트 충전/이용 내역을 모두 조회할 수 있다.")
+    @Test
+    void whenUserGetPoint_ThenSeeAllHistories() {
+        // given
+        UserPoint userPoint = getBeanContainer().userPointRepository.save(new UserPoint(1, 100, System.currentTimeMillis()));
+        PointHistory pointHistory1 = getBeanContainer().pointHistoryRepository.save(new PointHistory(1, userPoint.id(), 100, TransactionType.CHARGE, System.currentTimeMillis()));
+        PointHistory pointHistory2 = getBeanContainer().pointHistoryRepository.save(new PointHistory(2, userPoint.id(), 50, TransactionType.USE, System.currentTimeMillis()));
+
+        // when
+        List<PointHistory> pointHistories = getBeanContainer().pointController.history(1);
+
+        // TODO: 2024-09-21 동시성 제어를 하고 나면, 동일한 순서가 보장되어야 한다.
+        // then
+        assertThat(pointHistories).hasSize(2)
+                .containsExactlyInAnyOrder(pointHistory1, pointHistory2);
+    }
+
+    /*
+     * 테스트 작성 이유 : 사용자는 포인트를 충전할 수 있어야 합니다.
+     */
+    @DisplayName("사용자가 포인트를 충전할 수 있다.")
+    @Test
+    void userCanChargePoint() {
+        // given
+        UserPoint userPoint = getBeanContainer().userPointRepository.save(new UserPoint(1, 100, System.currentTimeMillis()));
+        long currentPoint = userPoint.point();
+        long chargeAmount = 100;
+
+        // when
+        UserPoint result = getBeanContainer().pointController.charge(userPoint.id(), chargeAmount);
+
+        // then
+        assertThat(result.id()).isEqualTo(userPoint.id());
+        assertThat(result.point()).isEqualTo(currentPoint + chargeAmount);
+    }
+
+    /*
+     * 테스트 작성 이유 : 0원 또는 음수는 충전 가능 금액이 되어선 안 됩니다.
+     */
+    @DisplayName("충전 금액은 0보다 커야 한다.")
+    @Test
+    void whenChargeAmountLessOrEqualZero_thenCannotCharge() {
+        // given
+        UserPoint userPoint = getBeanContainer().userPointRepository.save(new UserPoint(1, 100, System.currentTimeMillis()));
+        long chargeAmount = 0;
+
+        // when
+        // then
+        assertThatThrownBy(() -> getBeanContainer().pointController.charge(userPoint.id(), chargeAmount))
+                .isInstanceOf(ChargePointNotPositiveException.class);
+    }
+
+    /*
+     * 테스트 작성 이유 : 사용자는 포인트를 사용할 수 있어야 합니다. 이때 사용자는 제약 없이 남은 포인트를 100% 모두 소진할 수 있습니다.(경계값 분석)
+     */
+    @DisplayName("사용자가 포인트를 사용할 수 있다.")
+    @Test
+    void userCanUsePoint() {
+        // given
+        long point = 100;
+        long useAmount = 100;
+        UserPoint userPoint = getBeanContainer().userPointRepository.save(new UserPoint(1, point, System.currentTimeMillis()));
+
+        // when
+        UserPoint result = getBeanContainer().pointController.use(userPoint.id(), useAmount);
+
+        // then
+        assertThat(result.id()).isEqualTo(userPoint.id());
+        assertThat(result.point()).isZero();
+    }
+
+    /*
+     * 테스트 작성 이유 : "잔고가 부족할 경우, 포인트 사용은 실패하여야 합니다." 라는 요구사항을 만족시키기 위해 테스트를 작성합니다.
+     */
+    @DisplayName("잔고가 부족하면 포인트를 사용할 수 없다.")
+    @Test
+    void whenPointNotEnoughThenCannotUse() {
+        // given
+        UserPoint userPoint = getBeanContainer().userPointRepository.save(new UserPoint(1, 10, System.currentTimeMillis()));
+        long useAmount = userPoint.point() + 1;
+
+        // when
+        // then
+        assertThatThrownBy(() -> getBeanContainer().pointController.use(userPoint.id(), useAmount))
+                .isInstanceOf(OutOfPointException.class);
+    }
+
+    // TODO: 2024-09-21 포인트 정책 추가. 잔고부족 및 최대잔고 등
+    // TODO: 2024-09-21 integration package 에서 동시성 제어를 하기 위한 테스트 케이스 작성 후 동시성 제어 기능 구현
+}
