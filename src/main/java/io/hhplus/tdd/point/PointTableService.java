@@ -38,6 +38,7 @@ public class PointTableService implements PointService {
 
         // 포인트 충전
         UserPoint userPoint = userPointRepository.selectById(id);
+
         userPoint = userPoint.charge(amount);
         userPointRepository.save(userPoint);
 
