@@ -1,21 +1,21 @@
 package io.hhplus.tdd.mock;
 
-import io.hhplus.tdd.point.PointController;
-import io.hhplus.tdd.point.PointHistoryRepository;
-import io.hhplus.tdd.point.UserPointRepository;
+import io.hhplus.tdd.point.*;
 
 public class BeanContainer {
 
-    public final PointController pointController;
     public final UserPointRepository userPointRepository;
     public final PointHistoryRepository pointHistoryRepository;
+    public final PointService pointService;
+    public final PointController pointController;
 
     public BeanContainer() {
-        // point bean
+        // mock objects
         this.userPointRepository = new UserPointMockRepository();
         this.pointHistoryRepository = new PointHistoryMockRepository();
-        this.pointController = new PointController();
 
-        // others ...
+        // systems under test
+        this.pointService = new PointTableService(userPointRepository, pointHistoryRepository);
+        this.pointController = new PointController(pointService);
     }
 }
