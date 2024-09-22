@@ -124,6 +124,23 @@ public class PointServiceUnitTest extends TddApplicationUnitTest {
     }
 
     /*
+     * 테스트 작성 이유 : 0원 또는 음수는 사용 가능 금액이 되어선 안 됩니다.
+     * 보통은 @Valid, @Validated 등을 사용하여 검증하지만, 해당 프로젝트에 validation 의존성이 추가되지 않았기에 모든 비즈니르 로직은 서비스에서 검증한다고 가정합니다.
+     */
+    @DisplayName("사용할 포인트는 0원보다 커야 한다.")
+    @Test
+    void whenUseAmountLessOrEqualZero_thenCannotUse() {
+        // given
+        UserPoint userPoint = BEAN_CONTAINER.userPointRepository.save(new UserPoint(1, 100, System.currentTimeMillis()));
+        long useAmount = 0;
+
+        // when
+        // then
+        assertThatThrownBy(() -> BEAN_CONTAINER.pointService.use(userPoint.id(), useAmount))
+                .isInstanceOf(ChargePointNotPositiveException.class);
+    }
+
+    /*
      * 테스트 작성 이유 : "잔고가 부족할 경우, 포인트 사용은 실패하여야 합니다." 라는 요구사항을 만족시키기 위해 테스트를 작성합니다.
      */
     @DisplayName("잔고가 부족하면 포인트를 사용할 수 없다.")
