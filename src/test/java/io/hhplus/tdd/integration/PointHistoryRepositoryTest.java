@@ -4,7 +4,7 @@ import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.PointHistoryRepository;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
-import org.junit.jupiter.api.Assertions;
+import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +25,14 @@ public class PointHistoryRepositoryTest extends TddApplicationIntegrationTest {
     @Test
     void save() {
         // given
-        UserPoint userPoint = UserPoint.empty(1);
+        UserPoint userPoint = UserPoint.empty(UniqueUserIdHolder.next());
         PointHistory pointHistory = new PointHistory(0, userPoint.id(), 100, TransactionType.CHARGE, 0);
 
         // when
         PointHistory savedPointHistory = pointHistoryRepository.save(pointHistory);
 
         // then
-        assertThat(savedPointHistory.id()).isGreaterThanOrEqualTo(1);
+        assertThat(savedPointHistory.id()).isGreaterThan(0);
         assertThat(savedPointHistory.userId()).isEqualTo(userPoint.id());
         assertThat(savedPointHistory.amount()).isEqualTo(pointHistory.amount());
         assertThat(savedPointHistory.type()).isEqualTo(pointHistory.type());
@@ -46,11 +46,9 @@ public class PointHistoryRepositoryTest extends TddApplicationIntegrationTest {
     @Test
     void selectAllByUserId() {
         // given
-        UserPoint userPoint = UserPoint.empty(1);
-        PointHistory pointHistory1 = new PointHistory(1, userPoint.id(), 100, TransactionType.CHARGE, System.currentTimeMillis());
-        PointHistory pointHistory2 = new PointHistory(2, userPoint.id(), 50, TransactionType.USE, System.currentTimeMillis());
-        pointHistoryRepository.save(pointHistory1);
-        pointHistoryRepository.save(pointHistory2);
+        UserPoint userPoint = UserPoint.empty(UniqueUserIdHolder.next());
+        PointHistory pointHistory1 = pointHistoryRepository.save(new PointHistory(0, userPoint.id(), 100, TransactionType.CHARGE, 0));
+        PointHistory pointHistory2 = pointHistoryRepository.save(new PointHistory(0, userPoint.id(), 50, TransactionType.USE, 0));
 
         // when
         List<PointHistory> pointHistories = pointHistoryRepository.selectAllByUserId(userPoint.id());

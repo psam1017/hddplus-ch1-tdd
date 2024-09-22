@@ -2,6 +2,7 @@ package io.hhplus.tdd.integration;
 
 import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.point.UserPointRepository;
+import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +21,15 @@ public class UserPointRepositoryTest extends TddApplicationIntegrationTest {
     @Test
     void save() {
         // given
-        UserPoint userPoint = UserPoint.empty(1);
+        int point = 100;
+        UserPoint userPoint = new UserPoint(UniqueUserIdHolder.next(), point, System.currentTimeMillis());
         
         // when
         UserPoint savedUserPoint = userPointRepository.save(userPoint);
         
         // then
         assertThat(savedUserPoint.id()).isEqualTo(userPoint.id());
+        assertThat(savedUserPoint.point()).isEqualTo(userPoint.point());
     }
 
     /*
@@ -36,7 +39,7 @@ public class UserPointRepositoryTest extends TddApplicationIntegrationTest {
     @Test
     void selectById() {
         // given
-        UserPoint userPoint = UserPoint.empty(1);
+        UserPoint userPoint = UserPoint.empty(UniqueUserIdHolder.next());
         userPointRepository.save(userPoint);
 
         // when

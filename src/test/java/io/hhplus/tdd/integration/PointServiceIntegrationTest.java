@@ -3,6 +3,7 @@ package io.hhplus.tdd.integration;
 import io.hhplus.tdd.point.*;
 import io.hhplus.tdd.point.exception.ChargePointNotPositiveException;
 import io.hhplus.tdd.point.exception.OutOfPointException;
+import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
     @Test
     void whenUserGetPoint_ThenSeeCurrentPoint() {
         // given
-        UserPoint userPoint = userPointRepository.save(new UserPoint(1, 100, System.currentTimeMillis()));
+        UserPoint userPoint = userPointRepository.save(new UserPoint(UniqueUserIdHolder.next(), 100, System.currentTimeMillis()));
 
         // when
         UserPoint result = pointService.point(userPoint.id());
@@ -47,12 +48,12 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
     @Test
     void whenUserGetPoint_ThenSeeAllHistories() {
         // given
-        UserPoint userPoint = userPointRepository.save(new UserPoint(1, 100, System.currentTimeMillis()));
+        UserPoint userPoint = userPointRepository.save(new UserPoint(UniqueUserIdHolder.next(), 100, System.currentTimeMillis()));
         PointHistory pointHistory1 = pointHistoryRepository.save(new PointHistory(1, userPoint.id(), 100, TransactionType.CHARGE, System.currentTimeMillis()));
         PointHistory pointHistory2 = pointHistoryRepository.save(new PointHistory(2, userPoint.id(), 50, TransactionType.USE, System.currentTimeMillis()));
 
         // when
-        List<PointHistory> pointHistories = pointService.history(1);
+        List<PointHistory> pointHistories = pointService.history(userPoint.id());
 
         // then
         assertThat(pointHistories).hasSize(2)
@@ -66,13 +67,13 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
     @Test
     void whenNotUserGetPoint_thenNoPoint() {
         // given
-        long notExistUserId = 999L;
+        long userId = UniqueUserIdHolder.next();
 
         // when
-        UserPoint result = pointService.point(notExistUserId);
+        UserPoint result = pointService.point(userId);
 
         // then
-        assertThat(result.id()).isEqualTo(notExistUserId);
+        assertThat(result.id()).isEqualTo(userId);
         assertThat(result.point()).isEqualTo(0);
     }
 
@@ -83,7 +84,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
     @Test
     void userCanChargePoint() {
         // given
-        UserPoint userPoint = userPointRepository.save(new UserPoint(1, 100, System.currentTimeMillis()));
+        UserPoint userPoint = userPointRepository.save(new UserPoint(UniqueUserIdHolder.next(), 100, System.currentTimeMillis()));
         long currentPoint = userPoint.point();
         long chargeAmount = 100;
 
@@ -103,7 +104,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
     @Test
     void whenChargeAmountLessOrEqualZero_thenCannotCharge() {
         // given
-        UserPoint userPoint = userPointRepository.save(new UserPoint(1, 100, System.currentTimeMillis()));
+        UserPoint userPoint = userPointRepository.save(new UserPoint(UniqueUserIdHolder.next(), 100, System.currentTimeMillis()));
         long chargeAmount = 0;
 
         // when
@@ -121,7 +122,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
         // given
         long point = 100;
         long useAmount = 100;
-        UserPoint userPoint = userPointRepository.save(new UserPoint(1, point, System.currentTimeMillis()));
+        UserPoint userPoint = userPointRepository.save(new UserPoint(UniqueUserIdHolder.next(), point, System.currentTimeMillis()));
 
         // when
         UserPoint result = pointService.use(userPoint.id(), useAmount);
@@ -139,7 +140,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
     @Test
     void whenUseAmountLessOrEqualZero_thenCannotUse() {
         // given
-        UserPoint userPoint = userPointRepository.save(new UserPoint(1, 100, System.currentTimeMillis()));
+        UserPoint userPoint = userPointRepository.save(new UserPoint(UniqueUserIdHolder.next(), 100, System.currentTimeMillis()));
         long useAmount = 0;
 
         // when
@@ -155,7 +156,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
     @Test
     void whenPointNotEnoughThenCannotUse() {
         // given
-        UserPoint userPoint = userPointRepository.save(new UserPoint(1, 10, System.currentTimeMillis()));
+        UserPoint userPoint = userPointRepository.save(new UserPoint(UniqueUserIdHolder.next(), 10, System.currentTimeMillis()));
         long useAmount = userPoint.point() + 1;
 
         // when

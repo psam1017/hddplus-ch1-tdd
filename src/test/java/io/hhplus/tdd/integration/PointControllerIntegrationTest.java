@@ -1,52 +1,54 @@
 package io.hhplus.tdd.integration;
 
-import io.hhplus.tdd.point.*;
+import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.TransactionType;
+import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.exception.OutOfPointException;
+import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.List;
+
+import static org.mockito.BDDMockito.given;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class PointControllerIntegrationTest extends TddApplicationIntegrationTest {
+public class PointControllerIntegrationTest extends TddApplicationControllerTestSupport {
 
     @Autowired
     MockMvc mockMvc;
-
-    @Autowired
-    UserPointRepository userPointRepository;
-
-    @Autowired
-    PointHistoryRepository pointHistoryRepository;
 
     /*
      * 테스트 작성 이유 : 포인트를 충전할 수 있어야 합니다.
      */
     @DisplayName("포인트를 충전한다.")
     @Test
-    void charge() throws Exception {
+    void userCanChargePoint() throws Exception {
         // given
-        UserPoint userPoint = new UserPoint(1, 100, System.currentTimeMillis());
-        userPointRepository.save(userPoint);
-        long currentPoint = userPoint.point();
+        long userId = UniqueUserIdHolder.next();
         long chargeAmount = 100;
+
+        given(pointService.charge(userId, chargeAmount))
+                .willReturn(new UserPoint(userId, chargeAmount, System.currentTimeMillis()));
 
         // when
         ResultActions resultActions = mockMvc.perform(
-                patch("/point/{id}/charge", userPoint.id())
+                patch("/point/{id}/charge", userId)
                         .contentType(APPLICATION_JSON)
                         .content(createJson(chargeAmount))
         );
 
         // then
         resultActions.andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(userPoint.id()))
-                .andExpect(jsonPath("$.point").value(currentPoint + chargeAmount));
+                .andExpect(jsonPath("$.id").value(userId))
+                .andExpect(jsonPath("$.point").value(chargeAmount));
     }
 
     /*
@@ -54,24 +56,26 @@ public class PointControllerIntegrationTest extends TddApplicationIntegrationTes
      */
     @DisplayName("포인트를 사용한다.")
     @Test
-    void use() throws Exception {
+    void userCanUsePoint() throws Exception {
         // given
-        UserPoint userPoint = new UserPoint(1, 100, System.currentTimeMillis());
-        userPointRepository.save(userPoint);
-        long currentPoint = userPoint.point();
+        long userId = UniqueUserIdHolder.next();
         long useAmount = 100;
+        int resultAmount = 0;
+
+        given(pointService.use(userId, useAmount))
+                .willReturn(new UserPoint(userId, resultAmount, System.currentTimeMillis()));
 
         // when
         ResultActions resultActions = mockMvc.perform(
-                patch("/point/{id}/use", userPoint.id())
+                patch("/point/{id}/use", userId)
                         .contentType(APPLICATION_JSON)
                         .content(createJson(useAmount))
         );
 
         // then
         resultActions.andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(userPoint.id()))
-                .andExpect(jsonPath("$.point").value(currentPoint - useAmount));
+                .andExpect(jsonPath("$.id").value(userId))
+                .andExpect(jsonPath("$.point").value(resultAmount));
     }
 
     /*
@@ -79,18 +83,24 @@ public class PointControllerIntegrationTest extends TddApplicationIntegrationTes
      */
     @DisplayName("포인트를 조회한다.")
     @Test
-    void point() throws Exception {
+    void whenUserGetPoint_ThenSeeCurrentPoint() throws Exception {
         // given
-        UserPoint userPoint = new UserPoint(1, 100, System.currentTimeMillis());
-        userPointRepository.save(userPoint);
+        long userId = UniqueUserIdHolder.next();
+        long currentPoint = 100;
+
+        given(pointService.point(userId))
+                .willReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));
 
         // when
-        ResultActions resultActions = mockMvc.perform(get("/point/{id}", userPoint.id()));
+        ResultActions resultActions = mockMvc.perform(
+                get("/point/{id}", userId)
+                        .contentType(APPLICATION_JSON)
+        );
 
         // then
         resultActions.andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(userPoint.id()))
-                .andExpect(jsonPath("$.point").value(userPoint.point()));
+                .andExpect(jsonPath("$.id").value(userId))
+                .andExpect(jsonPath("$.point").value(currentPoint));
     }
 
     /*
@@ -98,23 +108,30 @@ public class PointControllerIntegrationTest extends TddApplicationIntegrationTes
      */
     @DisplayName("포인트 내역을 조회한다.")
     @Test
-    void history() throws Exception {
+    void whenUserGetPoint_ThenSeeAllHistories() throws Exception {
         // given
-        UserPoint userPoint = new UserPoint(1, 100, System.currentTimeMillis());
-        userPoint = userPointRepository.save(userPoint);
-        pointHistoryRepository.save(new PointHistory(0, userPoint.id(), 100, TransactionType.CHARGE, 0));
-        pointHistoryRepository.save(new PointHistory(0, userPoint.id(), 50, TransactionType.USE, 0));
+        long userId = UniqueUserIdHolder.next();
+        List<PointHistory> histories = List.of(
+                new PointHistory(1, userId, 100, TransactionType.CHARGE, System.currentTimeMillis()),
+                new PointHistory(2, userId, 50, TransactionType.USE, System.currentTimeMillis())
+        );
+
+        given(pointService.history(userId))
+                .willReturn(histories);
 
         // when
-        ResultActions resultActions = mockMvc.perform(get("/point/{id}/histories", userPoint.id()));
+        ResultActions resultActions = mockMvc.perform(
+                get("/point/{id}/histories", userId)
+                        .contentType(APPLICATION_JSON)
+        );
 
         // then
         resultActions.andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].userId").value(userPoint.id()))
+                .andExpect(jsonPath("$[0].userId").value(userId))
                 .andExpect(jsonPath("$[0].amount").value(100))
                 .andExpect(jsonPath("$[0].type").value("CHARGE"))
-                .andExpect(jsonPath("$[1].userId").value(userPoint.id()))
+                .andExpect(jsonPath("$[1].userId").value(userId))
                 .andExpect(jsonPath("$[1].amount").value(50))
                 .andExpect(jsonPath("$[1].type").value("USE"));
     }
@@ -126,13 +143,16 @@ public class PointControllerIntegrationTest extends TddApplicationIntegrationTes
     @Test
     void whenUserUsePoint_ThenFailIfOutOfPoint() throws Exception {
         // given
-        UserPoint userPoint = UserPoint.empty(1);
-        userPoint = userPointRepository.save(userPoint);
+        long userId = UniqueUserIdHolder.next();
+        long currentPoint = 50;
         long useAmount = 100;
+
+        given(pointService.use(userId, useAmount))
+                .willThrow(new OutOfPointException(userId, currentPoint));
 
         // when
         ResultActions resultActions = mockMvc.perform(
-                patch("/point/{id}/use", userPoint.id())
+                patch("/point/{id}/use", userId)
                         .contentType(APPLICATION_JSON)
                         .content(createJson(useAmount))
         );
