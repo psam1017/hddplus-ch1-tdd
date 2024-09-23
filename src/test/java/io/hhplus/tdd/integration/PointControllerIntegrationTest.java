@@ -137,7 +137,7 @@ public class PointControllerIntegrationTest extends TddApplicationControllerTest
     }
 
     /*
-     * 테스트 작성 이유 : 사용할 포인트 금액은 잔고보다 작아야 합니다.
+     * 테스트 작성 이유 : 사용할 포인트 금액은 잔고보다 작아야 합니다. 이때, 응답 메시지로 code 와 message 가 반환되어야 합니다.
      */
     @DisplayName("잔고가 부족할 경우, 포인트 사용은 실패하여야 한다.")
     @Test

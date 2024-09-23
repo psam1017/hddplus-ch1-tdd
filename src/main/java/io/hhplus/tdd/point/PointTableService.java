@@ -1,6 +1,7 @@
 package io.hhplus.tdd.point;
 
 import io.hhplus.tdd.point.exception.ChargePointNotPositiveException;
+import io.hhplus.tdd.point.exception.MaxPointExceededException;
 import io.hhplus.tdd.point.exception.OutOfPointException;
 import org.springframework.stereotype.Service;
 
@@ -8,6 +9,8 @@ import java.util.List;
 
 @Service
 public class PointTableService implements PointService {
+
+    private static final long MAX_POINT = 100000L; // 100,000 포인트
 
     private final UserPointRepository userPointRepository;
     private final PointHistoryRepository pointHistoryRepository;
@@ -38,8 +41,12 @@ public class PointTableService implements PointService {
 
         // 포인트 충전
         UserPoint userPoint = userPointRepository.selectById(id);
-
         userPoint = userPoint.charge(amount);
+
+        // 로직 검사 - 최대 보유 가능 포인트를 제한합니다.
+        if (userPoint.point() > MAX_POINT) {
+            throw new MaxPointExceededException(MAX_POINT);
+        }
         userPointRepository.save(userPoint);
 
         // 충전 내역 저장

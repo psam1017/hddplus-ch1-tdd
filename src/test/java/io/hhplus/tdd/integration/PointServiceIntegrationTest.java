@@ -2,6 +2,7 @@ package io.hhplus.tdd.integration;
 
 import io.hhplus.tdd.point.*;
 import io.hhplus.tdd.point.exception.ChargePointNotPositiveException;
+import io.hhplus.tdd.point.exception.MaxPointExceededException;
 import io.hhplus.tdd.point.exception.OutOfPointException;
 import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import org.junit.jupiter.api.DisplayName;
@@ -111,6 +112,23 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
         // then
         assertThatThrownBy(() -> pointService.charge(userPoint.id(), chargeAmount))
                 .isInstanceOf(ChargePointNotPositiveException.class);
+    }
+
+    /*
+     * 테스트 작성 이유 : 사용자는 최대 100,000 포인트까지 보유할 수 있어야 한다는 정책을 추가했습니다.
+     * 이에 대한 테스트를 작성합니다.
+     */
+    @DisplayName("충전 금액은 100,000보다 적어야 한다.")
+    @Test
+    void whenChargeAmountMoreThanMaxPoint_thenCannotCharge() {
+        // given
+        UserPoint userPoint = userPointRepository.save(new UserPoint(1, 0, System.currentTimeMillis()));
+        long chargeAmount = 100001;
+
+        // when
+        // then
+        assertThatThrownBy(() -> pointService.charge(userPoint.id(), chargeAmount))
+                .isInstanceOf(MaxPointExceededException.class);
     }
 
     /*
