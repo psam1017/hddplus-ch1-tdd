@@ -3,21 +3,26 @@ package io.hhplus.tdd.point;
 import io.hhplus.tdd.point.exception.RequestPointNotPositiveException;
 import io.hhplus.tdd.point.exception.MaxPointExceededException;
 import io.hhplus.tdd.point.exception.OutOfPointException;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Primary
 @Service
-public class PointTableService implements PointService {
+public class PointStreamService implements PointService {
 
     private static final long MAX_POINT = 100000L; // 100,000 포인트
 
     private final UserPointRepository userPointRepository;
     private final PointHistoryRepository pointHistoryRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public PointTableService(UserPointRepository userPointRepository, PointHistoryRepository pointHistoryRepository) {
+    public PointStreamService(UserPointRepository userPointRepository, PointHistoryRepository pointHistoryRepository, ApplicationEventPublisher applicationEventPublisher) {
         this.userPointRepository = userPointRepository;
         this.pointHistoryRepository = pointHistoryRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -45,11 +50,16 @@ public class PointTableService implements PointService {
         if (userPoint.point() > MAX_POINT) {
             throw new MaxPointExceededException(MAX_POINT);
         }
-        userPointRepository.save(userPoint);
 
-        // 충전 내역 저장
+        // 포인트를 Queue 에 저장합니다.
+        UserPointQueueHolder.add(userPoint);
+
+        // 충전 내역을 Queue 에 저장합니다.
         // PointHistoryTable 에서는 pointHistoryId 와 updateMillis 가 버려지기 때문에 아무 값이나 입력합니다.
-        pointHistoryRepository.save(new PointHistory(0, id, amount, TransactionType.CHARGE, 0));
+        PointHistoryQueueHolder.add(new PointHistory(0, id, amount, TransactionType.CHARGE, 0));
+
+        // PointEvent 를 발생시켜 PointStreamImpl 에게 Queue 를 비우도록 요청합니다.
+        applicationEventPublisher.publishEvent(new PointEvent(this));
 
         return userPoint;
     }
@@ -67,13 +77,16 @@ public class PointTableService implements PointService {
             throw new OutOfPointException(id, userPoint.point());
         }
 
-        // 포인트 사용
+        // 포인트 사용을 Queue 에 저장합니다.
         userPoint = userPoint.use(amount);
-        userPointRepository.save(userPoint);
+        UserPointQueueHolder.add(userPoint);
 
-        // 사용 내역 저장
+        // 사용 내역을 Queue 에 저장합니다.
         // PointHistoryTable 에서는 pointHistoryId 와 updateMillis 가 버려지기 때문에 아무 값이나 입력합니다.
-        pointHistoryRepository.save(new PointHistory(0, id, amount, TransactionType.USE, 0));
+        PointHistoryQueueHolder.add(new PointHistory(0, id, amount, TransactionType.USE, 0));
+
+        // PointEvent 를 발생시켜 PointStreamImpl 에게 Queue 를 비우도록 요청합니다.
+        applicationEventPublisher.publishEvent(new PointEvent(this));
 
         return userPoint;
     }

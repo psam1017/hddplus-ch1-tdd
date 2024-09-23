@@ -7,6 +7,7 @@ import io.hhplus.tdd.point.exception.OutOfPointException;
 import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -163,4 +164,3 @@ public class PointControllerIntegrationTest extends TddApplicationControllerTest
                 .andExpect(jsonPath("$.message").value("에러가 발생했습니다."));
     }
 }
-    

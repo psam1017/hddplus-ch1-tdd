@@ -1,10 +1,10 @@
 package io.hhplus.tdd.integration;
 
+import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import io.hhplus.tdd.point.*;
-import io.hhplus.tdd.point.exception.ChargePointNotPositiveException;
 import io.hhplus.tdd.point.exception.MaxPointExceededException;
 import io.hhplus.tdd.point.exception.OutOfPointException;
-import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
+import io.hhplus.tdd.point.exception.RequestPointNotPositiveException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +45,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
     /*
      * 테스트 작성 이유 : 사용자는 충전한 내역과 이용한 내역 모두를 조회할 수 있어야 합니다.
      */
-    @DisplayName("사용자가 포인트 충전/이용 내역을 모두 조회할 수 있다.")
+    @DisplayName("사용자가 포인트 충전/이용 내역을 같이 조회할 수 있다.")
     @Test
     void whenUserGetPoint_ThenSeeAllHistories() {
         // given
@@ -111,7 +111,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
         // when
         // then
         assertThatThrownBy(() -> pointService.charge(userPoint.id(), chargeAmount))
-                .isInstanceOf(ChargePointNotPositiveException.class);
+                .isInstanceOf(RequestPointNotPositiveException.class);
     }
 
     /*
@@ -164,7 +164,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
         // when
         // then
         assertThatThrownBy(() -> pointService.use(userPoint.id(), useAmount))
-                .isInstanceOf(ChargePointNotPositiveException.class);
+                .isInstanceOf(RequestPointNotPositiveException.class);
     }
 
     /*

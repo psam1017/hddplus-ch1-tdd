@@ -48,6 +48,16 @@ public class PointStreamTest extends TddApplicationIntegrationTest {
         t1.join();
         t2.join();
 
+        int count = 0;
+        while (count < 10) {
+            if (UserPointQueueHolder.isEmpty() && PointHistoryQueueHolder.isEmpty()) {
+                break;
+            }
+            log.info("sleep a second");
+            sleep(1000);
+            count++;
+        }
+
         // when
         List<PointHistory> histories = pointService.history(saveUserPoint.id());
 
