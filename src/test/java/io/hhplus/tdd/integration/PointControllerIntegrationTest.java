@@ -1,15 +1,12 @@
 package io.hhplus.tdd.integration;
 
+import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.point.exception.OutOfPointException;
-import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
@@ -22,9 +19,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class PointControllerIntegrationTest extends TddApplicationControllerTestSupport {
-
-    @Autowired
-    MockMvc mockMvc;
 
     /*
      * 테스트 작성 이유 : 포인트를 충전할 수 있어야 합니다.
