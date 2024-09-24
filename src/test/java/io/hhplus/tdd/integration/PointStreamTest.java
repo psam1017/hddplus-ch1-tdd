@@ -31,6 +31,9 @@ public class PointStreamTest extends TddApplicationIntegrationTest {
      * 이를 위해 첫 번째로 호출하면 넉넉하게 1+초 이상의 지연이 발생하는 Decorator 로 테스트를 수행합니다.
      * Decorator 패턴을 사용하기 위해 PointService 의 메소드를 호출합니다.
      * PointHistoryTable, UserPointTable 은 0.3 초보다 적은 지연이 발생하기 때문에 실행 순서를 확인할 수 있습니다.
+     *
+     * 단점1. 테스트에 불필요한 지연을 의도적으로 발생시켜야 한다.
+     * 단점2. JVM 의 자원 제어 방식에 따라 테스트 결과가 달라질 수 있다. 예를 들어, 더 늦게 수행되어야 하는 Thread 가 먼저 수행될 수 있다.
      */
     @DisplayName("지연 여부와 상관 없이 호출 순서로 포인트를 충전할 수 있다.")
     @Test
