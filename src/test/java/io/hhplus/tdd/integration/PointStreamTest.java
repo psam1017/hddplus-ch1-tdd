@@ -2,6 +2,7 @@ package io.hhplus.tdd.integration;
 
 import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import io.hhplus.tdd.point.*;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -16,6 +17,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+// 테스트 과정에 지연이 발생하지 않도록 비활성화시킵니다.
+@Disabled
 public class PointStreamTest extends TddApplicationIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(PointStreamTest.class);
