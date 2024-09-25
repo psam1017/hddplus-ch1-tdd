@@ -1,7 +1,6 @@
 // noinspection NpmUsedModulesInstalled,JSUnresolvedReference
 
 import http from 'k6/http';
-import { sleep } from 'k6';
 
 export default function () {
     let url = 'http://localhost:8080/point/1/charge';
@@ -14,7 +13,7 @@ export default function () {
             },
         };
 
-        http.patch(url, payload, params);
-        sleep(0.01); // 0.01 초 대기하고 요청 전송
+        let patch = http.patch(url, payload, params);
+        console.log("Status : " + patch.status);
     }
 }
