@@ -2,21 +2,17 @@ package io.hhplus.tdd.integration;
 
 import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import io.hhplus.tdd.point.*;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-// 테스트 과정에 지연이 발생하지 않도록 비활성화시킵니다.
 public class PointStreamServiceTest extends TddApplicationIntegrationTest {
 
     @Autowired
@@ -28,21 +24,25 @@ public class PointStreamServiceTest extends TddApplicationIntegrationTest {
     @Autowired
     UserPointRepository userPointRepository;
 
-    @DisplayName("PointStream 이 이벤트 발생을 감지할 수 있다.")
+    @DisplayName("사용자가 요청한 순서대로 포인트를 조작할 수 있다.")
     @Test
-    void chargeByCallingOrder() throws InterruptedException, ExecutionException {
+    void chargeByCallingOrder() {
         // given
         UserPoint userPoint = UserPoint.empty(UniqueUserIdHolder.next());
         UserPoint saveUserPoint = userPointRepository.save(userPoint);
-        CompletableFuture<Void> charge1 = CompletableFuture.runAsync(() -> pointService.charge(saveUserPoint.id(), 100));
-        CompletableFuture<Void> use1 = CompletableFuture.runAsync(() -> pointService.use(saveUserPoint.id(), 100));
-        CompletableFuture<Void> charge2 = CompletableFuture.runAsync(() -> pointService.charge(saveUserPoint.id(), 200));
-        CompletableFuture<Void> use2 = CompletableFuture.runAsync(() -> pointService.use(saveUserPoint.id(), 200));
 
+        pointService.charge(saveUserPoint.id(), 100);
+        pointService.use(saveUserPoint.id(), 100);
+        pointService.charge(saveUserPoint.id(), 200);
+        pointService.use(saveUserPoint.id(), 200);
+
+        // PointHistoryTable 의 최대 지연 시간은 0.3 초 입니다.
+        // System 동작 시간까지 고려해서 1.2 * 2 = 2.4 초 이상으로 설정합니다.
         // when
-        CompletableFuture
-                .allOf(charge1, use1, charge2, use2)
-                .join();
+        Awaitility.await()
+                .atMost(2400, TimeUnit.MILLISECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() -> pointService.history(saveUserPoint.id()).size() == 4);
 
         // then
         List<PointHistory> histories = pointService.history(saveUserPoint.id());
@@ -54,12 +54,5 @@ public class PointStreamServiceTest extends TddApplicationIntegrationTest {
                         tuple(200L, TransactionType.CHARGE),
                         tuple(200L, TransactionType.USE)
                 );
-    }
-
-    private static void sleep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ignored) {
-        }
     }
 }
