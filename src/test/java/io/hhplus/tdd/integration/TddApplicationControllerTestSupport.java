@@ -2,8 +2,8 @@ package io.hhplus.tdd.integration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.hhplus.tdd.point.PointController;
-import io.hhplus.tdd.point.PointService;
+import io.hhplus.tdd.point.controller.PointController;
+import io.hhplus.tdd.point.service.PointService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;

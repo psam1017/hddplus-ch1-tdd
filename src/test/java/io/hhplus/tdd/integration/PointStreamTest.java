@@ -1,12 +1,20 @@
 package io.hhplus.tdd.integration;
 
 import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
-import io.hhplus.tdd.point.*;
+import io.hhplus.tdd.point.entity.PointHistory;
+import io.hhplus.tdd.point.entity.UserPoint;
+import io.hhplus.tdd.point.enumeration.TransactionType;
+import io.hhplus.tdd.point.infrastructure.PointEvent;
+import io.hhplus.tdd.point.infrastructure.PointHistoryQueueHolder;
+import io.hhplus.tdd.point.infrastructure.UserPointIdentityMap;
+import io.hhplus.tdd.point.infrastructure.UserPointQueueHolder;
+import io.hhplus.tdd.point.repository.PointHistoryRepository;
+import io.hhplus.tdd.point.repository.UserPointRepository;
+import io.hhplus.tdd.point.stream.PointStream;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 

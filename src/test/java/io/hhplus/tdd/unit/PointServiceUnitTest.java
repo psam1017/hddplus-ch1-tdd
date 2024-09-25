@@ -1,8 +1,8 @@
 package io.hhplus.tdd.unit;
 
-import io.hhplus.tdd.point.PointHistory;
-import io.hhplus.tdd.point.TransactionType;
-import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.entity.PointHistory;
+import io.hhplus.tdd.point.enumeration.TransactionType;
+import io.hhplus.tdd.point.entity.UserPoint;
 import io.hhplus.tdd.point.exception.RequestPointNotPositiveException;
 import io.hhplus.tdd.point.exception.MaxPointExceededException;
 import io.hhplus.tdd.point.exception.OutOfPointException;

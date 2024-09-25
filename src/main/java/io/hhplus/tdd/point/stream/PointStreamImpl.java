@@ -1,5 +1,13 @@
-package io.hhplus.tdd.point;
+package io.hhplus.tdd.point.stream;
 
+import io.hhplus.tdd.point.infrastructure.PointEvent;
+import io.hhplus.tdd.point.entity.PointHistory;
+import io.hhplus.tdd.point.entity.UserPoint;
+import io.hhplus.tdd.point.infrastructure.UserPointIdentityMap;
+import io.hhplus.tdd.point.infrastructure.PointHistoryQueueHolder;
+import io.hhplus.tdd.point.infrastructure.UserPointQueueHolder;
+import io.hhplus.tdd.point.repository.PointHistoryRepository;
+import io.hhplus.tdd.point.repository.UserPointRepository;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;

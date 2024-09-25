@@ -1,28 +1,28 @@
-package io.hhplus.tdd.point;
+package io.hhplus.tdd.point.infrastructure;
 
-import java.util.Optional;
+import io.hhplus.tdd.point.entity.PointHistory;
+
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class UserPointQueueHolder {
+public class PointHistoryQueueHolder {
 
     /*
     LinkedBlockingQueue
     - producer 가 많고, consumer 가 하나일 때 사용하기 좋다.
     - 필요한 경우 Queue Size 를 지정할 수 있다.
      */
-    private static final Queue<UserPoint> userPointQueue = new LinkedBlockingQueue<>();
+    private static final Queue<PointHistory> userPointQueue = new LinkedBlockingQueue<>();
 
-    public static void add(UserPoint userPoint) {
+    public static void add(PointHistory userPoint) {
         userPointQueue.add(userPoint);
-        UserPointIdentityMap.put(userPoint);
     }
 
     public static boolean isEmpty() {
         return userPointQueue.isEmpty();
     }
 
-    public static UserPoint poll() {
+    public static PointHistory poll() {
         return userPointQueue.poll();
     }
 }

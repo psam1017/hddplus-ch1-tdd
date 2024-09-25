@@ -1,9 +1,9 @@
 package io.hhplus.tdd.integration;
 
-import io.hhplus.tdd.point.PointHistory;
-import io.hhplus.tdd.point.PointHistoryRepository;
-import io.hhplus.tdd.point.TransactionType;
-import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.entity.PointHistory;
+import io.hhplus.tdd.point.repository.PointHistoryRepository;
+import io.hhplus.tdd.point.enumeration.TransactionType;
+import io.hhplus.tdd.point.entity.UserPoint;
 import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

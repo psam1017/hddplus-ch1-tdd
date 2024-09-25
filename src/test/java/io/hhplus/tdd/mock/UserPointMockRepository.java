@@ -1,7 +1,7 @@
 package io.hhplus.tdd.mock;
 
-import io.hhplus.tdd.point.UserPoint;
-import io.hhplus.tdd.point.UserPointRepository;
+import io.hhplus.tdd.point.entity.UserPoint;
+import io.hhplus.tdd.point.repository.UserPointRepository;
 
 import java.util.ArrayList;
 import java.util.Collections;

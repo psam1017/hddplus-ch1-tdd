@@ -1,10 +1,15 @@
 package io.hhplus.tdd.integration;
 
 import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
-import io.hhplus.tdd.point.*;
+import io.hhplus.tdd.point.entity.PointHistory;
+import io.hhplus.tdd.point.entity.UserPoint;
+import io.hhplus.tdd.point.enumeration.TransactionType;
 import io.hhplus.tdd.point.exception.MaxPointExceededException;
 import io.hhplus.tdd.point.exception.OutOfPointException;
 import io.hhplus.tdd.point.exception.RequestPointNotPositiveException;
+import io.hhplus.tdd.point.repository.PointHistoryRepository;
+import io.hhplus.tdd.point.repository.UserPointRepository;
+import io.hhplus.tdd.point.service.PointService;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

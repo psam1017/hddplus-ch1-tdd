@@ -1,4 +1,6 @@
-package io.hhplus.tdd.point;
+package io.hhplus.tdd.point.infrastructure;
+
+import io.hhplus.tdd.point.entity.UserPoint;
 
 import java.util.Map;
 import java.util.Optional;

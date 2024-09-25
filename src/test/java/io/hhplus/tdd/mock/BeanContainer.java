@@ -1,6 +1,10 @@
 package io.hhplus.tdd.mock;
 
-import io.hhplus.tdd.point.*;
+import io.hhplus.tdd.point.controller.PointController;
+import io.hhplus.tdd.point.repository.PointHistoryRepository;
+import io.hhplus.tdd.point.repository.UserPointRepository;
+import io.hhplus.tdd.point.service.PointService;
+import io.hhplus.tdd.point.service.PointTableService;
 
 public class BeanContainer {
 
