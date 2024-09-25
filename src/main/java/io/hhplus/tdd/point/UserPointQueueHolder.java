@@ -15,6 +15,7 @@ public class UserPointQueueHolder {
 
     public static void add(UserPoint userPoint) {
         userPointQueue.add(userPoint);
+        UserPointIdentityMap.put(userPoint);
     }
 
     public static boolean isEmpty() {
@@ -23,11 +24,5 @@ public class UserPointQueueHolder {
 
     public static UserPoint poll() {
         return userPointQueue.poll();
-    }
-
-    public static Optional<UserPoint> search(long userId) {
-        return userPointQueue.stream()
-                .filter(userPoint -> userPoint.id() == userId)
-                .findFirst();
     }
 }

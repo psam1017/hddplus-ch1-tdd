@@ -23,6 +23,7 @@ public class PointStreamImpl implements PointStream {
             UserPoint userPoint = UserPointQueueHolder.poll();
             if (userPoint != null) {
                 userPointRepository.save(userPoint);
+                UserPointIdentityMap.remove(userPoint.id());
             }
         }
         while (!PointHistoryQueueHolder.isEmpty()) {

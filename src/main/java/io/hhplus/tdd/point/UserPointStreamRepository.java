@@ -24,8 +24,8 @@ public class UserPointStreamRepository implements UserPointRepository {
 
     @Override
     public UserPoint selectById(long id) {
-        return UserPointQueueHolder
-                .search(id)
+        return UserPointIdentityMap
+                .find(id)
                 .orElseGet(() -> userPointTable.selectById(id));
     }
 }
