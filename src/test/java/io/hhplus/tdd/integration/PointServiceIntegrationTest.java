@@ -197,7 +197,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
      */
     @DisplayName("사용자가 요청한 순서대로 포인트를 조작할 수 있다.")
     @Test
-    void chargeByCallingOrder() {
+    void chargeAndUseByCallingOrder() {
         // given
         UserPoint userPoint = UserPoint.empty(UniqueUserIdHolder.next());
         UserPoint saveUserPoint = userPointRepository.save(userPoint);
