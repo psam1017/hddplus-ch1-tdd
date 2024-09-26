@@ -1,18 +1,19 @@
 package io.hhplus.tdd.integration;
 
+import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
 import io.hhplus.tdd.point.*;
-import io.hhplus.tdd.point.exception.ChargePointNotPositiveException;
 import io.hhplus.tdd.point.exception.MaxPointExceededException;
 import io.hhplus.tdd.point.exception.OutOfPointException;
-import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
+import io.hhplus.tdd.point.exception.RequestPointNotPositiveException;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
 
@@ -45,7 +46,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
     /*
      * 테스트 작성 이유 : 사용자는 충전한 내역과 이용한 내역 모두를 조회할 수 있어야 합니다.
      */
-    @DisplayName("사용자가 포인트 충전/이용 내역을 모두 조회할 수 있다.")
+    @DisplayName("사용자가 포인트 충전/이용 내역을 같이 조회할 수 있다.")
     @Test
     void whenUserGetPoint_ThenSeeAllHistories() {
         // given
@@ -111,7 +112,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
         // when
         // then
         assertThatThrownBy(() -> pointService.charge(userPoint.id(), chargeAmount))
-                .isInstanceOf(ChargePointNotPositiveException.class);
+                .isInstanceOf(RequestPointNotPositiveException.class);
     }
 
     /*
@@ -164,7 +165,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
         // when
         // then
         assertThatThrownBy(() -> pointService.use(userPoint.id(), useAmount))
-                .isInstanceOf(ChargePointNotPositiveException.class);
+                .isInstanceOf(RequestPointNotPositiveException.class);
     }
 
     /*
@@ -172,7 +173,7 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
      */
     @DisplayName("잔고가 부족하면 포인트를 사용할 수 없다.")
     @Test
-    void whenPointNotEnoughThenCannotUse() {
+    void whenPointNotEnough_ThenCannotUse() {
         // given
         UserPoint userPoint = userPointRepository.save(new UserPoint(UniqueUserIdHolder.next(), 10, System.currentTimeMillis()));
         long useAmount = userPoint.point() + 1;
@@ -181,5 +182,41 @@ public class PointServiceIntegrationTest extends TddApplicationIntegrationTest {
         // then
         assertThatThrownBy(() -> pointService.use(userPoint.id(), useAmount))
                 .isInstanceOf(OutOfPointException.class);
+    }
+
+    /*
+     * 테스트 작성 이유 : 요청 순서대로 포인트를 조작하는 게 최소한의 요구사항이기에 항상 통과해야 하는 테스트입니다.
+     * ApplicationEventPublisher 를 사용하여 이벤트를 발행하고 비동기로 Queue 의 데이터를 DB 로 보내기 때문에 service 메소드가 호출 종료되어도 데이터가 바로 DB 에 반영되지 않을 수 있습니다.
+     * 따라서 Awaitility 를 사용하여 테스트를 작성합니다.
+     * PointHistoryTable 의 최대 지연 시간은 0.3 초 입니다. 시스템 동작 시간까지 고려해서 1.2 * 2 = 2.4 초 이상으로 설정합니다.
+     */
+    @DisplayName("사용자가 요청한 순서대로 포인트를 조작할 수 있다.")
+    @Test
+    void chargeByCallingOrder() {
+        // given
+        UserPoint userPoint = UserPoint.empty(UniqueUserIdHolder.next());
+        UserPoint saveUserPoint = userPointRepository.save(userPoint);
+
+        // when
+        pointService.charge(saveUserPoint.id(), 100);
+        pointService.use(saveUserPoint.id(), 100);
+        pointService.charge(saveUserPoint.id(), 200);
+        pointService.use(saveUserPoint.id(), 200);
+
+        Awaitility.await()
+                .atMost(2400, TimeUnit.MILLISECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() -> pointService.history(saveUserPoint.id()).size() == 4);
+
+        // then
+        List<PointHistory> histories = pointService.history(saveUserPoint.id());
+        assertThat(histories).hasSize(4)
+                .extracting(h -> tuple(h.amount(), h.type()))
+                .containsExactly(
+                        tuple(100L, TransactionType.CHARGE),
+                        tuple(100L, TransactionType.USE),
+                        tuple(200L, TransactionType.CHARGE),
+                        tuple(200L, TransactionType.USE)
+                );
     }
 }

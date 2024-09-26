@@ -3,7 +3,7 @@ package io.hhplus.tdd.unit;
 import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
-import io.hhplus.tdd.point.exception.ChargePointNotPositiveException;
+import io.hhplus.tdd.point.exception.RequestPointNotPositiveException;
 import io.hhplus.tdd.point.exception.MaxPointExceededException;
 import io.hhplus.tdd.point.exception.OutOfPointException;
 import org.junit.jupiter.api.DisplayName;
@@ -102,7 +102,7 @@ public class PointServiceUnitTest extends TddApplicationUnitTest {
         // when
         // then
         assertThatThrownBy(() -> BEAN_CONTAINER.pointService.charge(userPoint.id(), chargeAmount))
-                .isInstanceOf(ChargePointNotPositiveException.class);
+                .isInstanceOf(RequestPointNotPositiveException.class);
     }
 
     /*
@@ -155,7 +155,7 @@ public class PointServiceUnitTest extends TddApplicationUnitTest {
         // when
         // then
         assertThatThrownBy(() -> BEAN_CONTAINER.pointService.use(userPoint.id(), useAmount))
-                .isInstanceOf(ChargePointNotPositiveException.class);
+                .isInstanceOf(RequestPointNotPositiveException.class);
     }
 
     /*
