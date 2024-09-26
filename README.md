@@ -34,6 +34,7 @@ private void throttle(long millis) {
 
 ## 기존 구조의 한계
 ![4 diagram-1](https://github.com/user-attachments/assets/7ecf0837-934f-4334-8fda-b8d6ed77c2d3)
+
 일반적인 패키지 구조를 가정해봅시다:
 
 - **Service**가 **Repository**를 호출하고,
@@ -42,6 +43,7 @@ private void throttle(long millis) {
 이런 상황에서 A 사용자가 포인트 **충전, 사용, 충전** 등을 번갈아가면서 요청한다면, **Table에 저장하는 지연 시간이 제각각**이라 **요청 순서대로 데이터를 제어할 수 없습니다**.
 
 ![9 file](https://github.com/user-attachments/assets/add3dfcd-9e7f-487e-be58-931103bdec6b)
+
 빠르게 100P, 200P, 300P, ... 3,000P 를 충전하는 요청을 보냈을 때 **지연시간 때문에 요청 순서대로 데이터가 처리되지 않는 모습**을 볼 수 있습니다.
 
 ## 해결 방안
@@ -57,6 +59,7 @@ private void throttle(long millis) {
 
 ## 1차 리팩토링: 비동기 이벤트와 Queue 적용
 ![5 diagram-2](https://github.com/user-attachments/assets/788d9b5a-b765-4ca1-b47f-638b7ff0efda)
+
 제가 의도한 1차 리팩토링한 패키지 구조입니다:
 
 - **Service**는 이제 데이터를 삽입/갱신하기 위해 **Repository**를 직접 호출하는 대신 `QueueHolder#add`를 호출하여 **Queue에 데이터를 밀어넣고**, `ApplicationEventPublisher#publishEvent`를 호출하여 **Queue에 데이터가 삽입되었음을 알리는 Event를 발행**합니다.
@@ -68,7 +71,7 @@ private void throttle(long millis) {
 
 ### 1. 동시에 요청이 들어온 만큼 이벤트 비동기 함수가 같이 수행됨
 
-동시에 요청이 들어오더라도 **각 스레드마다 비동기 함수를 실행**하려고 발생하는 문제입니다. 3번의 요청이 들어오면 3번의 이벤트가 발행되어 **동시에 함수를 호출**하면 동시에 Queue에 접근해서 비우려고 합니다. 이렇게 되면 결국 **Queue를 사용하는 의미가 없어지게 될 겁니다**.
+동시에 요청이 들어오더라도 **각 스레드마다 비동기 함수를 실행**하려고 해서 발생하는 문제입니다. 3번의 요청이 들어오면 3번의 이벤트가 발행되어 **동시에 함수를 호출**하면 동시에 Queue에 접근해서 비우려고 합니다. 이렇게 되면 결국 **Queue를 사용하는 의미가 없어지게 될 겁니다**.
 
 #### 해결책
 
@@ -118,6 +121,7 @@ public class PointStream implements PointStream {
 
 이 상황을 방지하기 위해서, 저는 **IdentityMap이라는 방법**을 사용했습니다.
 ![8 diagram-5](https://github.com/user-attachments/assets/30efe2f8-acca-4a62-bdc6-05fba63a6283)
+
 **IdentityMap**은 보통 메모리에 저장한 동일한 객체가 여러 번 생성되거나 로드되는 것을 방지하는 디자인 패턴입니다. 저는 이번 프로젝트에서, **최신화된 데이터가 Table에 제대로 저장될 때까지 동일한 데이터를 메모리에 들고 있는 객체**로서 사용했습니다. 해당 IdentityMap의 최신화된 데이터는 **Table에 데이터가 안전히 저장되면 제거**하도록 합니다.
 
 이제 **Repository는 1차적으로 IdentityMap에서 데이터를 찾고**, 여기에서 데이터를 찾지 못한 경우 **Table에서 데이터를 찾아옵니다**. 또한, **IdentityMap은 Table에 데이터가 온전히 저장될 때까지 최신 데이터를 계속 보관**하기 때문에 **Table 처럼 최신화된 상태를 보장**할 수 있습니다.
