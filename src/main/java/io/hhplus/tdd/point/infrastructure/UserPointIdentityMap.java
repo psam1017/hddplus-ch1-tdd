@@ -14,8 +14,11 @@ public class UserPointIdentityMap {
         userPointMap.put(userPoint.id(), userPoint);
     }
 
-    public static void remove(long userId) {
-        userPointMap.remove(userId);
+    public static void remove(UserPoint userPoint) {
+        UserPoint findUserPoint = userPointMap.get(userPoint.id());
+        if (findUserPoint != null && userPoint.point() == findUserPoint.point()) {
+            userPointMap.remove(userPoint.id());
+        }
     }
 
     public static Optional<UserPoint> find(long userId) {
