@@ -1,0 +1,25 @@
+// 실패하는 경우의 테스트
+// 원인은 유효성 검사를 할 때, Queue, Table 이 아닌 지연 대기 중인 UserPoint 가 변수로만 존재하기 때문
+
+        UserPoint userPoint = UserPoint.empty(UniqueUserIdHolder.next());
+        UserPoint saveUserPoint = userPointRepository.save(userPoint);
+        CompletableFuture<Void> charge1 = CompletableFuture.runAsync(() -> pointService.charge(saveUserPoint.id(), 100));
+        CompletableFuture<Void> use1 = CompletableFuture.runAsync(() -> pointService.use(saveUserPoint.id(), 100));
+        CompletableFuture<Void> charge2 = CompletableFuture.runAsync(() -> pointService.charge(saveUserPoint.id(), 200));
+        CompletableFuture<Void> use2 = CompletableFuture.runAsync(() -> pointService.use(saveUserPoint.id(), 200));
+
+        // when
+        CompletableFuture
+                .allOf(charge1, use1, charge2, use2)
+                .join();
+
+        // then
+        List<PointHistory> histories = pointService.history(saveUserPoint.id());
+        assertThat(histories).hasSize(4)
+                .extracting(h -> tuple(h.amount(), h.type()))
+                .containsExactly(
+                        tuple(100L, TransactionType.CHARGE),
+                        tuple(100L, TransactionType.USE),
+                        tuple(200L, TransactionType.CHARGE),
+                        tuple(200L, TransactionType.USE)
+                );
