@@ -1,12 +1,14 @@
-package io.hhplus.tdd.integration;
+package io.hhplus.tdd.point;
 
-import io.hhplus.tdd.infrastructure.UniqueUserIdHolder;
+import io.hhplus.tdd.utility.UniqueUserIdHolder;
 import io.hhplus.tdd.point.entity.PointHistory;
 import io.hhplus.tdd.point.enumeration.TransactionType;
 import io.hhplus.tdd.point.entity.UserPoint;
 import io.hhplus.tdd.point.exception.OutOfPointException;
+import io.hhplus.tdd.point.service.PointService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
@@ -18,11 +20,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class PointControllerIntegrationTest extends TddApplicationControllerTestSupport {
+public class PointControllerTest extends TddApplicationControllerSupport {
 
-    /*
-     * 테스트 작성 이유 : 포인트를 충전할 수 있어야 합니다.
-     */
+    @MockBean
+    protected PointService pointService;
+
     @DisplayName("포인트를 충전한다.")
     @Test
     void userCanChargePoint() throws Exception {
@@ -46,9 +48,6 @@ public class PointControllerIntegrationTest extends TddApplicationControllerTest
                 .andExpect(jsonPath("$.point").value(chargeAmount));
     }
 
-    /*
-     * 테스트 작성 이유 : 포인트를 사용할 수 있어야 합니다.
-     */
     @DisplayName("포인트를 사용한다.")
     @Test
     void userCanUsePoint() throws Exception {
@@ -73,9 +72,6 @@ public class PointControllerIntegrationTest extends TddApplicationControllerTest
                 .andExpect(jsonPath("$.point").value(resultAmount));
     }
 
-    /*
-     * 테스트 작성 이유 : 포인트를 조회할 수 있어야 합니다.
-     */
     @DisplayName("포인트를 조회한다.")
     @Test
     void whenUserGetPoint_ThenSeeCurrentPoint() throws Exception {
@@ -98,9 +94,6 @@ public class PointControllerIntegrationTest extends TddApplicationControllerTest
                 .andExpect(jsonPath("$.point").value(currentPoint));
     }
 
-    /*
-     * 테스트 작성 이유 : 포인트 내역을 조회할 수 있어야 합니다.
-     */
     @DisplayName("포인트 내역을 조회한다.")
     @Test
     void whenUserGetPoint_ThenSeeAllHistories() throws Exception {
@@ -131,9 +124,6 @@ public class PointControllerIntegrationTest extends TddApplicationControllerTest
                 .andExpect(jsonPath("$[1].type").value("USE"));
     }
 
-    /*
-     * 테스트 작성 이유 : 사용할 포인트 금액은 잔고보다 작아야 합니다. 이때, 응답 메시지로 code 와 message 가 반환되어야 합니다.
-     */
     @DisplayName("잔고가 부족할 경우, 포인트 사용은 실패하여야 한다.")
     @Test
     void whenUserUsePoint_ThenFailIfOutOfPoint() throws Exception {

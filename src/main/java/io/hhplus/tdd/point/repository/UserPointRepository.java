@@ -1,10 +1,26 @@
 package io.hhplus.tdd.point.repository;
 
+import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.entity.UserPoint;
+import org.springframework.stereotype.Repository;
 
-public interface UserPointRepository {
+@Repository
+public class UserPointRepository {
 
-    UserPoint save(UserPoint userPoint);
+    private final UserPointTable userPointTable;
 
-    UserPoint selectById(long id);
+    public UserPointRepository(UserPointTable userPointTable) {
+        this.userPointTable = userPointTable;
+    }
+
+    public UserPoint save(UserPoint userPoint) {
+        return userPointTable.insertOrUpdate(
+                userPoint.id(),
+                userPoint.point()
+        );
+    }
+
+    public UserPoint selectById(long id) {
+        return userPointTable.selectById(id);
+    }
 }

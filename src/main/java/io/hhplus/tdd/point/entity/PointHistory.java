@@ -9,4 +9,8 @@ public record PointHistory(
         TransactionType type,
         long updateMillis
 ) {
+
+    public static PointHistory of(long userId, long amount, TransactionType type) {
+        return new PointHistory(0, userId, amount, type, System.currentTimeMillis());
+    }
 }

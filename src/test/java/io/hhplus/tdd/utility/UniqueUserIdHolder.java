@@ -1,4 +1,4 @@
-package io.hhplus.tdd.infrastructure;
+package io.hhplus.tdd.utility;
 
 public class UniqueUserIdHolder {
 
